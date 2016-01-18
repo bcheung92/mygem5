@@ -144,7 +144,7 @@ Text::begin()
 {
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
     //zlf 2016-1-14
-    if_context_switch = true;
+ //   if_context_switch = true;
     //zlf 2016-1-14
 }
 

@@ -87,6 +87,9 @@ typedef uint16_t MasterID;
 class Request
 {
   public:
+    //zlf 4 reorder 2016-1-18
+    unsigned int SN = 0;
+    //end zlf 
     typedef uint32_t FlagsType;
     typedef uint8_t ArchFlagsType;
     typedef ::Flags<FlagsType> Flags;

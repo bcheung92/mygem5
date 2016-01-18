@@ -44,6 +44,8 @@
 #ifndef __SIM_STAT_CONTROL_HH__
 #define __SIM_STAT_CONTROL_HH__
 
+#include<map>
+extern std::map<unsigned int ,unsigned int > reorder_map;
 namespace Stats {
 
 double statElapsedTime();

@@ -557,7 +557,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
     assert(load_inst);
 
     assert(!load_inst->isExecuted());
-
+//zlf 4 get load inst seqNum 2016-1-18
+    req->SN = load_inst->seqNum;
+////end zlf 
     // Make sure this isn't a strictly ordered load
     // A bit of a hackish way to get strictly ordered accesses to work
     // only if they're at the head of the LSQ and are ready to commit
@@ -877,7 +879,9 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
                      uint8_t *data, int store_idx)
 {
     assert(storeQueue[store_idx].inst);
-
+    //zlf 4 store 2016-1-18
+    req->SN = storeQueue[store_idx].inst->seqNum;
+    //end zlf 2016-1-18
     DPRINTF(LSQUnit, "Doing write to store idx %i, addr %#x"
             " | storeHead:%i [sn:%i]\n",
             store_idx, req->getPaddr(), storeHead,

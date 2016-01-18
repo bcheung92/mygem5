@@ -58,13 +58,99 @@
 #include "sim/global_event.hh"
 #include "sim/stat_control.hh"
 
-using namespace std;
 
+//zlf
+#include<map>
+#include<vector>
+#include "base/stats/text.hh"
+
+//end
+Stats::SparseHistogram Stack_Distance_Distribution_In_Order;
+using namespace std;
+//Stats::SpareHistogram Stack_Distance_Distribution_In_Order;
 Stats::Formula simSeconds;
 Stats::Value simTicks;
 Stats::Value finalTick;
 Stats::Value simFreq;
 
+//zlf 2016-1-18
+typedef std::map<unsigned int, std::vector<unsigned int>> Set_Map_Stack_In_Order;
+Set_Map_Stack_In_Order set_map_stack_in_order;
+typedef std::map<unsigned int ,unsigned int > Reorder_Map;
+Reorder_Map reorder_map;
+int setShift = 6;
+int numSets = (32*1024)/(64*2);
+
+int setMask = numSets-1;
+int extractSet (unsigned int);
+
+int extractSet (unsigned int addr_temp)
+{
+    return ((addr_temp)& setMask);
+}
+void swap_reorder(Reorder_Map &map)
+{
+    Reorder_Map map_temp;
+    map.swap(map_temp);
+}
+void swap_stack(Set_Map_Stack_In_Order &map)
+{
+    Set_Map_Stack_In_Order map_temp;
+    map.swap(map_temp);
+}
+void swap_vector(std::vector<unsigned int> &vec)
+{
+    std::vector<unsigned int > temp;
+    vec.swap(temp);
+}
+void calculate();
+void calculate()
+{
+ //   static unsigned int loads_number = 0; 
+    int set_num_in_order = 0;
+    Reorder_Map::iterator map_pos;
+    std::vector<unsigned int>::iterator stack_pos_in_order;
+    std::map<unsigned int ,std::vector<unsigned int>>::iterator swap_pos;
+    for(map_pos = (reorder_map).begin();map_pos != reorder_map.end();map_pos++)
+    {
+  //      loads_number ++;
+        int stack_distance_in_order = 0;
+        int addr_temp0 = (*map_pos).second;
+        set_num_in_order = extractSet(addr_temp0);
+        int addr_temp1 = addr_temp0;
+        if(set_map_stack_in_order.find(set_num_in_order) != (set_map_stack_in_order).end())
+        {
+            for(stack_pos_in_order = (set_map_stack_in_order)[set_num_in_order].end();stack_pos_in_order != (set_map_stack_in_order)[set_num_in_order].begin();)
+            {
+                stack_pos_in_order -- ;
+                if (*stack_pos_in_order == addr_temp1)
+                {
+                    (set_map_stack_in_order)[set_num_in_order].erase(stack_pos_in_order);
+                    Stack_Distance_Distribution_In_Order.sample(stack_distance_in_order);
+                }
+                else
+                    stack_distance_in_order++;
+
+
+            }
+        }
+        set_map_stack_in_order[extractSet(addr_temp0)].push_back(addr_temp1);
+
+    }
+//    std::cout<<"loads_number_in_order= "<<loads_number<<std::endl;
+    
+    for(swap_pos = set_map_stack_in_order.begin();swap_pos!= set_map_stack_in_order.end();swap_pos++)
+    {
+       swap_vector(swap_pos->second);
+    }
+
+    swap_stack(set_map_stack_in_order);
+    swap_reorder(reorder_map);
+    
+}
+//swap_reorder(reorder_map);
+
+//end zlf 2016-1-18
 namespace Stats {
 
 Time statTime(true);
@@ -121,6 +207,13 @@ struct Global
 
 Global::Global()
 {
+    //zlf 2016-1-18
+    Stack_Distance_Distribution_In_Order
+        .init(0)
+        .name("Stack_Distance_Distribution_In_Order")
+        .desc("Stack_Distance_Distribution_In_Order")
+        ;
+    //end zlf 2016-1-18
     simInsts
         .functor(BaseCPU::numSimulatedInsts)
         .name("sim_insts")
@@ -229,6 +322,10 @@ class StatEvent : public GlobalEvent
     virtual void
     process()
     {
+        //zlf 4 calculate 2016-1-18
+        if_context_switch = true;
+        calculate();
+        //end zlf 2016-1-18
         if (dump)
             Stats::dump();
 

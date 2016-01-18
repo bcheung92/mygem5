@@ -67,6 +67,7 @@
 //zlf 2016-1-14
 #include "base/stats/text.hh"
 #include <map>
+#include "sim/stat_control.hh"
 //end 2016-1-14
 void Swap_mem(std::vector<unsigned int> &vec)
 {
@@ -714,10 +715,11 @@ Cache::recvTimingReq(PacketPtr pkt)
         // Note that lat is passed by reference here. The function
         // access() calls accessBlock() which can modify lat value.
         // zlf 2016-1-14
+ //       static int loads_number  = 0;
         int stack_distance=0;
         int addr_temp = (pkt->getAddr())>>tags->setShift;//to get the setnum+tag
         set_num = tags->extractSet(pkt->getAddr());//to get the set num
-        if(name()=="system.cpu.dacache")
+        if(name()=="system.cpu.dcache")
         {
             if(if_context_switch)
             {
@@ -731,14 +733,20 @@ Cache::recvTimingReq(PacketPtr pkt)
                     }
                     mapiter++;
                 }
+   //             std::cout<<"loads_number = " <<loads_number<<std::endl;
                 //assert(set_map_stack!=NULL);
                 if_context_switch = false;
             }
+            else{
+//            loads_number ++;
+// for reorder modified zlf 2016-1-18
+            reorder_map.insert(std::make_pair(pkt->req->SN,addr_temp));
+// end zlf 2016-1-18
             //to caculate the stack distance
             if (set_map_stack.find(set_num) !=set_map_stack.end())
             {
                 Stack_Distance_Vector::iterator stack_pos;
-                for(stack_pos=set_map_stack[set_num].begin();stack_pos !=set_map_stack[set_num].end();)
+                for(stack_pos=set_map_stack[set_num].end();stack_pos !=set_map_stack[set_num].begin();)
                 {
                     stack_pos --;
                     if (*stack_pos == addr_temp)
@@ -750,6 +758,7 @@ Cache::recvTimingReq(PacketPtr pkt)
                     else 
                         stack_distance++;
                 }
+            }
             }
         }
 
