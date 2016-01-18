@@ -432,6 +432,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             }
             //zlf add for stack distance 2016-1-14
             set_map_stack[tags->extractSet(pkt->getAddr())].push_back(pkt->getAddr()>>tags->setShift);
+            //std::cout<<"pushback 1"<<std::endl;
             //end zlf 2016-1-14
             tags->insertBlock(pkt, blk);
 
@@ -723,8 +724,9 @@ Cache::recvTimingReq(PacketPtr pkt)
                 Set_Map_Stack::iterator mapiter = set_map_stack.begin();
                 while(mapiter != set_map_stack.end())
                 {
-                    if((mapiter->second).empty())
+                    if(!(mapiter->second).empty())
                     {
+                       // std::cout<<"swap the mem"<<std::endl;
                         Swap_mem(mapiter->second);
                     }
                     mapiter++;
@@ -781,6 +783,7 @@ Cache::recvTimingReq(PacketPtr pkt)
         // lookup
         // zlf add for stack distance hit 2016-1-14
         set_map_stack[tags->extractSet(pkt->getAddr())].push_back(pkt->getAddr()>>tags->setShift);
+       // std::cout<<"pushback 2"<<std::endl;
         // end zlf 2016-1-14
         assert(!pkt->req->isUncacheable());
 
@@ -1823,6 +1826,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         } else {
 //zlf add for vector insert 2016-1-14
             set_map_stack[tags->extractSet(pkt->getAddr())].push_back(pkt->getAddr()>>tags->setShift);
+           // std::cout<<"pushback 3"<<std::endl;
 //end zlf 2016-1-14
             tags->insertBlock(pkt, blk);
         }
